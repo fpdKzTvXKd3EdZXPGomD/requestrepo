@@ -733,7 +733,7 @@ export function RequestsPage() {
 
           {/* Raw SMTP Transaction */}
           <h3 className="text-base font-semibold mb-2">Raw SMTP Transaction</h3>
-          <Code className="block whitespace-pre-wrap p-3 text-sm font-mono overflow-x-auto">
+          <Code className="block whitespace-pre-wrap p-3 text-sm font-mono overflow-auto max-h-[500px]">
             {rawDecoded.text}
           </Code>
         </CardBody>
