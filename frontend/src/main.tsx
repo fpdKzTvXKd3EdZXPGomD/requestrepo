@@ -31,19 +31,27 @@ declare global {
   }
 }
 
+const scrubSensitiveParams = (url: string): string => {
+  try {
+    const u = new URL(url, window.location.origin);
+    u.searchParams.delete("token");
+    u.searchParams.delete("share");
+    return u.toString();
+  } catch {
+    return url;
+  }
+};
+
 if (window.__CONFIG__?.SENTRY_DSN_FRONTEND) {
   Sentry.init({
     dsn: window.__CONFIG__.SENTRY_DSN_FRONTEND,
     beforeBreadcrumb(breadcrumb) {
-      if (breadcrumb.category === "xhr" && breadcrumb.data?.url) {
-        try {
-          const url = new URL(breadcrumb.data.url, window.location.origin);
-          url.searchParams.delete("token");
-          breadcrumb.data.url = url.toString();
-        } catch {
-          /* ignore malformed URLs */
-        }
-      }
+      if (breadcrumb.data?.url)
+        breadcrumb.data.url = scrubSensitiveParams(breadcrumb.data.url);
+      if (breadcrumb.data?.from)
+        breadcrumb.data.from = scrubSensitiveParams(breadcrumb.data.from);
+      if (breadcrumb.data?.to)
+        breadcrumb.data.to = scrubSensitiveParams(breadcrumb.data.to);
       return breadcrumb;
     },
     beforeSend(event, hint) {
@@ -61,6 +69,9 @@ if (window.__CONFIG__?.SENTRY_DSN_FRONTEND) {
         (error instanceof Event && error.type === "error")
       ) {
         return null;
+      }
+      if (event.request?.url) {
+        event.request.url = scrubSensitiveParams(event.request.url);
       }
       return event;
     },
